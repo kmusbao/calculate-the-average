@@ -3,8 +3,9 @@
 ## Usage
 
 1. put your files in "data" folder.
-2. run python main.py --files [file names] --report [report type]
-example: python main.py --files products1.csv products2.csv --report average-rating
+2. run "python main.py --files [file names] --report [report type]"
+
+For example: "python main.py --files products1.csv products2.csv --report average-rating"
 
 _____
 
