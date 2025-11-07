@@ -1,12 +1,10 @@
-import pytest
 import builtins
-import sys
 from unittest.mock import patch, mock_open
 
-from main import (
-    calculate_average_values,
-    process_files,
-)
+
+from models.product import Product
+from models.report import AverageReport
+from utils.process_files import process_files
 
 MOCK_CSV_DATA_1 = (
     "brand,name,rating,price\n"
@@ -43,15 +41,20 @@ MOCK_ROWS = [
     {'brand': 'BrandC', 'name': 'Item6', 'rating': '3.0', 'price': '50'},
 ]
 
+def prod_creation(data):
+    products = [Product.from_dict(row) for row in data]
+    return products
 
 def test_calculate_average_rating():
     expected = {'smart': 4.5, 'medium': 3.3, 'simple': 1.3}
-    average_values = calculate_average_values(TEST_DATA, "average-rating")
+    avg_report = AverageReport("average-rating")
+    average_values = avg_report.calculate_average_values(prod_creation(TEST_DATA))
     assert average_values == expected
 
 def test_calculate_average_price():
     expected = {'smart': 150, 'medium': 145, 'simple': 101}
-    average_values = calculate_average_values(TEST_DATA, "average-price-in-brand")
+    avg_report = AverageReport("average-price-in-brand")
+    average_values = avg_report.calculate_average_values(prod_creation(TEST_DATA))
     assert average_values == expected
 
 def test_calculate_with_missing_or_invalid_data():
@@ -61,9 +64,11 @@ def test_calculate_with_missing_or_invalid_data():
         {'brand': 'InvalidPrice', 'rating': '3.0', 'price': 'free'}, # Пропуск цены
         {'name': 'NoBrand', 'rating': '5.0', 'price': '50'}, # Пропуск бренда
     ]
+    avg_report = AverageReport("average-rating")
+    avg_report2 = AverageReport("average-price-in-brand")
 
-    assert calculate_average_values(invalid_rows, "average-rating") == {'Valid': 4.0}
-    assert calculate_average_values(invalid_rows, "average-price-in-brand") == {'Valid': 10.0}
+    assert avg_report.calculate_average_values(prod_creation(invalid_rows)) == {'Valid': 4.0}
+    assert avg_report2.calculate_average_values(prod_creation(invalid_rows)) == {'Valid': 10.0}
 
 ## File reading tests
 
@@ -74,7 +79,7 @@ MOCK_FILE_CONTENT = {
 
 @patch('builtins.open', new_callable=mock_open)
 @patch('builtins.print')
-@patch('main.tabulate', return_value="MOCKED_TABLE_OUTPUT")
+@patch('utils.process_files.tabulate', return_value="MOCKED_TABLE_OUTPUT")
 def test_process_files_one_file(mock_tabulate, mock_print, mock_file):
     """One file handle and report generation."""
     mock_file.side_effect = lambda f, *args, **kwargs: mock_open(read_data=MOCK_CSV_DATA_1).return_value
